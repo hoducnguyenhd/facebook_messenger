@@ -68,52 +68,47 @@ class FacebookNotificationService(BaseNotificationService):
         """Send a message to one or more targets."""
         payload = {"access_token": self.page_access_token}
         targets = kwargs.get(ATTR_TARGET)
-        data = kwargs.get(ATTR_DATA)
+        data = kwargs.get(ATTR_DATA) or {}
 
-        media = None
-        media_type = "image/jpeg"
+        media = data.get(KEY_MEDIA)
+        media_type = data.get(KEY_MEDIA_TYPE, "image/jpeg")
 
-        # Default body message
         body_message = {"text": message}
 
-        # Handle data with media or buttons
-        if data is not None:
-            if KEY_MEDIA in data:
-                media = data[KEY_MEDIA]
-                if not os.path.exists(media):
-                    _LOGGER.error(f"Media file not found: [{media}]")
-                    media = None
-                else:
-                    media_type = data.get(KEY_MEDIA_TYPE, "image/jpeg")
-
-            elif "buttons" in data and "text" in data:
-                # Build button template message
-                body_message = {
-                    "attachment": {
-                        "type": "template",
-                        "payload": {
-                            "template_type": "button",
-                            "text": data["text"],
-                            "buttons": data["buttons"],
-                        },
-                    }
+        if media:
+            if not os.path.exists(media):
+                _LOGGER.error(f"Media file not found: [{media}]")
+                media = None
+        elif "buttons" in data:
+            text_content = data.get("text", message)
+            body_message = {
+                "attachment": {
+                    "type": "template",
+                    "payload": {
+                        "template_type": "button",
+                        "text": text_content,
+                        "buttons": data["buttons"],
+                    },
                 }
-            else:
-                # Append other data if no special template
-                body_message.update(data)
-                if "attachment" in body_message:
-                    body_message.pop("text", None)
+            }
+        elif "quick_replies" in data:
+            body_message = {
+                "text": message,
+                "quick_replies": data["quick_replies"]
+            }
+        else:
+            body_message.update(data)
+            if "attachment" in body_message:
+                body_message.pop("text", None)
 
         if not targets:
             _LOGGER.error("At least 1 target is required")
             return
 
         for target in targets:
-            # Resolve target name to SID if applicable
             if target in self.targets_map:
                 target = self.targets_map[target]
 
-            # Determine recipient format
             recipient = {"phone_number": target} if target.startswith("+") else {"id": target}
 
             if media:
