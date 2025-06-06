@@ -125,7 +125,7 @@ Quick summary to get things working:
   action:
     - service: notify.messenger
       data:
-        target: mike
+        target: nguyen
         message: "Test Home Assistant."
 ```
 
@@ -139,6 +139,40 @@ Quick summary to get things working:
         data:
           media: "<path to image file on server>"
           media_type: "image/jpeg"
+```
+#### Button notification
+
+```yaml
+  action:
+    - service: notify.messenger
+      data:
+        target: nguyen
+        message: "Chọn thao tác:"
+        data:
+          buttons:
+            - type: postback
+              title: "Mở đèn"
+              payload: "MO_DEN"
+            - type: postback
+              title: "Tắt đèn"
+              payload: "TAT_DEN"  
+```
+#### Quick replies notification
+
+```yaml
+  action:
+    - service: notify.messenger
+      data:
+        target: nguyen
+        message: ""Bạn muốn làm gì?"
+        data:
+          quick_replies:
+            - content_type: text
+              title: "Bật TV"
+              payload: "BAT_TV"
+            - content_type: text
+              title: "Tắt TV"
+              payload: "TAT_TV"    
 ```
 
 It is important to specify correct `media_type`. It is validated by Facebook and message will be rejected when `media_type` doesn't match actual media file type. `image/jpeg` is default value.
