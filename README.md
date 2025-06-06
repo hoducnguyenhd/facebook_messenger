@@ -164,7 +164,7 @@ Quick summary to get things working:
     - service: notify.messenger
       data:
         target: nguyen
-        message: ""Bạn muốn làm gì?"
+        message: "Bạn muốn làm gì?"
         data:
           quick_replies:
             - content_type: text
@@ -173,6 +173,23 @@ Quick summary to get things working:
             - content_type: text
               title: "Tắt TV"
               payload: "TAT_TV"    
+```
+#### Automation_Webhook JSON reciever
+
+```yaml
+- alias: "Webhook JSON Handler"
+  description: "Xử lý JSON gửi từ webhook"
+  trigger:
+    - platform: webhook
+      webhook_id: my_webhook  # bạn gọi /api/webhook/my_webhook
+  action:
+    - variables:
+        json_data: "{{ trigger.json }}"
+    - service: persistent_notification.create
+      data:
+        title: "Webhook đã nhận"
+        message: >
+          Đã nhận dữ liệu: {{ json_data | tojson }}
 ```
 
 It is important to specify correct `media_type`. It is validated by Facebook and message will be rejected when `media_type` doesn't match actual media file type. `image/jpeg` is default value.
