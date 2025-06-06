@@ -211,7 +211,7 @@ condition: template
   value_template: |-
     {% set data = trigger.json %}
     {{
-      data.entry[0].messaging[0].sender.id == "10041745015887050" and
+      data.entry[0].messaging[0].sender.id == "<<your psid>>" and
       "postback" in data.entry[0].messaging[0] and
       (data.entry[0].messaging[0].postback.payload == "MO_DEN" or data.entry[0].messaging[0].postback.payload == "TAT_DEN")
     }}
