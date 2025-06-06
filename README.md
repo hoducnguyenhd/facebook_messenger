@@ -195,7 +195,7 @@ Quick summary to get things working:
 
 ```yaml
 condition: template
-value_template: |2-
+value_template: |-
       {% set data = trigger.json %}
       {{
         data.entry[0].messaging[0].sender.id == "<<your psid>>" and
