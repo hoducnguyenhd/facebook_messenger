@@ -8,7 +8,7 @@
 
 # Facebook Messenger for Home Assistant
 
-This is an upgrade for <a href="https://www.home-assistant.io" target="_blank">Home Assistant</a> Facebook integration. It allows you to send notification to Messenger with images.
+This is an upgrade for <a href="https://www.home-assistant.io/integrations/facebook/" target="_blank">Home Assistant</a> Facebook integration. It allows you to send notification to Messenger with images.
 
 ----
 
