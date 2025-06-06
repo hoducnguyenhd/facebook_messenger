@@ -53,7 +53,7 @@ notify:
   page_access_token: <YOUR FACEBOOK TOKEN>
   targets:
     - sid: <YOUR PSID>
-      name: mike
+      name: nguyen
 ```
 
 Replace `<YOUR FACEBOOK TOKEN>` with your facebook token, use secrets.yaml for better protection.
@@ -126,7 +126,7 @@ Quick summary to get things working:
     - service: notify.messenger
       data:
         target: mike
-        message: "Hello from Home Assistant."
+        message: "Test Home Assistant."
 ```
 
 #### Image notification
@@ -135,7 +135,7 @@ Quick summary to get things working:
   action:
     - service: notify.messenger
       data:
-        target: mike
+        target: nguyen
         data:
           media: "<path to image file on server>"
           media_type: "image/jpeg"
