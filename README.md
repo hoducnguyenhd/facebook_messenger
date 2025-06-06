@@ -151,8 +151,8 @@ Quick summary to get things working:
         data:
           buttons:
             - type: postback
-              title: "Mở đèn"
-              payload: "MO_DEN"
+              title: "BẬT đèn"
+              payload: "BAT_DEN"
             - type: postback
               title: "Tắt đèn"
               payload: "TAT_DEN"  
@@ -168,11 +168,11 @@ Quick summary to get things working:
         data:
           quick_replies:
             - content_type: text
-              title: "Bật TV"
-              payload: "BAT_TV"
+              title: "Bật đèn"
+              payload: "BAT_DEN"
             - content_type: text
-              title: "Tắt TV"
-              payload: "TAT_TV"    
+              title: "Tắt đèn"
+              payload: "TAT_DEN"    
 ```
 #### Automation_Webhook JSON reciever
 
