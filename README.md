@@ -191,7 +191,31 @@ Quick summary to get things working:
         message: >
           Đã nhận dữ liệu: {{ json_data | tojson }}
 ```
+#### Automation_Webhook JSON reciever quick_reply
 
+```yaml
+condition: template
+value_template: |2-
+      {% set data = trigger.json %}
+      {{
+        data.entry[0].messaging[0].sender.id == "<<your psid>>" and
+        "quick_reply" in data.entry[0].messaging[0].message and
+        data.entry[0].messaging[0].message.quick_reply.payload == "BAT_DEN"
+      }}
+```
+#### Automation_Webhook JSON reciever button
+
+```yaml
+condition: template
+  value_template: |-
+    {% set data = trigger.json %}
+    {{
+      data.entry[0].messaging[0].sender.id == "10041745015887050" and
+      "postback" in data.entry[0].messaging[0] and
+      data.entry[0].messaging[0].postback.payload == "BAT_DEN"
+    }}
+
+```
 It is important to specify correct `media_type`. It is validated by Facebook and message will be rejected when `media_type` doesn't match actual media file type. `image/jpeg` is default value.
 
 You can also test it in Developer Tools, under Services tab.
