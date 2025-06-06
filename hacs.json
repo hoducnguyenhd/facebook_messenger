@@ -1,0 +1,7 @@
+{
+  "name": "Facebook Messenger",
+  "content_in_root": false,
+  "domains": ["notify"],
+  "country": "VN",
+  "homeassistant": "2021.0.0"
+}
