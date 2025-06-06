@@ -200,8 +200,9 @@ value_template: |2-
       {{
         data.entry[0].messaging[0].sender.id == "<<your psid>>" and
         "quick_reply" in data.entry[0].messaging[0].message and
-        data.entry[0].messaging[0].message.quick_reply.payload == "BAT_DEN"
+        (data.entry[0].messaging[0].message.quick_reply.payload == "BAT_DEN" or data.entry[0].messaging[0].message.quick_reply.payload == "TAT_DEN")
       }}
+
 ```
 #### Automation_Webhook JSON reciever button
 
@@ -212,9 +213,24 @@ condition: template
     {{
       data.entry[0].messaging[0].sender.id == "10041745015887050" and
       "postback" in data.entry[0].messaging[0] and
-      data.entry[0].messaging[0].postback.payload == "BAT_DEN"
+      (data.entry[0].messaging[0].postback.payload == "MO_DEN" or data.entry[0].messaging[0].postback.payload == "TAT_DEN")
     }}
-
+action:
+  - choose:
+      - conditions:
+          - condition: template
+            value_template: '{{ trigger.json.entry[0].messaging[0].postback.payload == "MO_DEN" }}'
+        sequence:
+          - service: switch.turn_on
+            target:
+              entity_id: switch.your_light_switch_entity
+      - conditions:
+          - condition: template
+            value_template: '{{ trigger.json.entry[0].messaging[0].postback.payload == "TAT_DEN" }}'
+        sequence:
+          - service: switch.turn_off
+            target:
+              entity_id: switch.your_light_switch_entity
 ```
 It is important to specify correct `media_type`. It is validated by Facebook and message will be rejected when `media_type` doesn't match actual media file type. `image/jpeg` is default value.
 
