@@ -174,22 +174,55 @@ Quick summary to get things working:
               title: "Tắt đèn"
               payload: "TAT_DEN"    
 ```
-#### Automation_Webhook JSON reciever
+#### Automation_Webhook JSON event
 
 ```yaml
-- alias: "Webhook JSON Handler"
-  description: "Xử lý JSON gửi từ webhook"
-  trigger:
-    - platform: webhook
-      webhook_id: my_webhook  # bạn gọi /api/webhook/my_webhook
-  action:
-    - variables:
-        json_data: "{{ trigger.json }}"
-    - service: persistent_notification.create
-      data:
-        title: "Webhook đã nhận"
-        message: >
-          Đã nhận dữ liệu: {{ json_data | tojson }}
+alias: Webhook Event Messenger
+description: ""
+triggers:
+  - webhook_id: messenger_inbox
+    trigger: webhook
+    allowed_methods:
+      - POST
+      - PUT
+      - GET
+    local_only: false
+actions:
+  - variables:
+      data: "{{ trigger.json }}"
+      messaging: "{{ data.entry[0].messaging[0] }}"
+      sender_id: "{{ messaging.sender.id }}"
+      text: |-
+        {% if 'message' in messaging and 'text' in messaging.message %}
+          {{ messaging.message.text }}
+        {% elif 'postback' in messaging and 'title' in messaging.postback %}
+          {{ messaging.postback.title }}
+        {% else %}
+          ""
+        {% endif %}
+      payload: |-
+        {% if 'postback' in messaging %}
+          {{ messaging.postback.payload }}
+        {% elif 'message' in messaging and 'quick_reply' in messaging.message %}
+          {{ messaging.message.quick_reply.payload }}
+        {% else %}
+          "null"
+        {% endif %}
+      action_type: |-
+        {% if 'postback' in messaging %}
+          button
+        {% elif 'message' in messaging and 'quick_reply' in messaging.message %}
+          quick_reply
+        {% else %}
+          null
+        {% endif %}
+  - event: **messenger_webhook**
+    event_data:
+      sender_id: "{{ sender_id }}"
+      text: "{{ text }}"
+      payload: "{{ payload }}"
+      action_type: "{{ action_type }}"
+
 ```
 #### Automation_Webhook JSON reciever quick_reply
 
