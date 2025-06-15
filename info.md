@@ -1,3 +1,3 @@
 # Facebook Messenger Integration
 
-This allows Home Assistant to send messages to Facebook Messenger.
+Tích hợp này cho phép Home Assistant gửi tin nhắn đến Facebook Messenger.
