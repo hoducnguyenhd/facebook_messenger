@@ -11,9 +11,9 @@
 
 ### Contents
 
- * [Functionality](#functionality)
- * [Installation](#installation)
- * [cấu hình](#configuration)
+ * [Chức năng](#functionality)
+ * [Cài đặt](#installation)
+ * [Cấu hình](#configuration)
  * [Cách lấy mã thông báo Facebook của bạn](#how-to-obtain-your-facebook-token)
  * [Hot to obtain your user's PSID](#how-to-obtain-your-user-psid)
  * [Installation and Configuration Summary](#installation-and-configuration-summary)
@@ -22,24 +22,21 @@
 
 ----
 
-### Functionality
+### Chức năng
 
-This integration is based on Facebook integration currently available in Home Assistant.
-It's possible to send text-based and image notifications. You can also assign names to your
-SIDs and use it as notification target.
-
-----
-
-### Installation
-
-HACS is the preferred installation method. Click [here](https://my.home-assistant.io/redirect/hacs_repository/?owner=hoducnguyenhd&repository=facebook_messenger&category=integration), you'll be
-redirected to your Home Assistant instance. If link doesn't work, you can find Facebook Messenger
-in HACS integrations repository list.\
-Manual method. Copy the `facebook_messenger` folder into the `config\custom_components` folder of your Home Assistant instance, and restart.
+Tích hợp này dựa trên tích hợp Facebook hiện có trong Trợ lý gia đình.
+Có thể gửi thông báo dựa trên văn bản, button, quick_reply và hình ảnh. 
+Bạn cũng có thể gán tên cho SID của mình và sử dụng nó làm mục tiêu thông báo.
 
 ----
 
-### Configuration
+### Cài đặt
+
+Cài đặt thông HACS. [here](https://my.home-assistant.io/redirect/hacs_repository/?owner=hoducnguyenhd&repository=facebook_messenger&category=integration)
+
+----
+
+### Cấu hình
 
 This integration exposes itself as a <a href="https://www.home-assistant.io/integrations/notify/" target="_blank">notifications integration</a>, and can be configured by adding this snippet in your `configuration.yaml` file:
 
