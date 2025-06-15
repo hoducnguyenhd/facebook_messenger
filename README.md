@@ -15,8 +15,7 @@
  * [Cài đặt](#installation)
  * [Cấu hình](#configuration)
  * [Cách lấy mã thông báo Facebook của bạn](#how-to-obtain-your-facebook-token)
- * [Hot to obtain your user's PSID](#how-to-obtain-your-user-psid)
- * [Installation and Configuration Summary](#installation-and-configuration-summary)
+ * [Cách lấy user PSID](#how-to-obtain-your-user-psid)
  * [Usage](#usage)
  * [License](#license)
 
