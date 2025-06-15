@@ -60,10 +60,10 @@ Khởi động lại Home Assistant để tải cấu hình.
 
 ### Làm thế nào để lấy Facebook token
 
-Để sử dụng tích hợp này, bạn phải đăng ký làm nhà phát triển Facebook và tạo ứng dụng sẽ thay mặt bạn gửi thông báo. Đầu tiên đăng nhập vào tài khoản Facebook của bạn và click [here](https://developers.facebook.com/async/registration) để bắt đầu quá trình đăng ký. làm theo hướng dẫn cảu Facebook (use developer :wink:).\
-When you've done with registration process, add [new application](https://developers.facebook.com/apps/create/).
+Để sử dụng tích hợp này, bạn phải đăng ký làm nhà phát triển Facebook và tạo ứng dụng sẽ thay mặt bạn gửi thông báo. Đầu tiên đăng nhập vào tài khoản Facebook của bạn và click [here](https://developers.facebook.com/async/registration) để bắt đầu quá trình đăng ký. làm theo hướng dẫn của Facebook (use developer :wink:).\
+Khi bạn đã hoàn tất quá trình đăng ký, hãy thêm [new application](https://developers.facebook.com/apps/create/).
 
-1. Choose app type Business
+1. Chọn loại ứng dụng Kinh Doanh
 2. Choose Display name, enter your email and click Create App. You'll have to enter password again.
 3. On the next page **Add products to your app** find Messenger tile and click Set up.
 4. Find **Access Tokens** section and click **Create new Page**, new tab will open, keep this one open, you return here in steps 7 and 10
@@ -77,36 +77,7 @@ When you've done with registration process, add [new application](https://develo
 
 ----
 
-### How to obtain your user PSID
-
-This part is quite tricky, hope you can get through this. As using phone numbers is not an option nowdays, this is the only way to get things working. To find your (or your testers) PSID you have to assign webhook
-to your page, that webhook will reply with your PSID. Let's start.
-
-1. For creating webhook we'll use [glitch.com](https://glitch.com), you don't need to register there
-2. Open my project [get-messenger-page-sid](https://glitch.com/edit/#!/get-messenger-page-sid) and click `Remix`
-3. New project is created, on the left you have file manager, click `.env`
-4. Paste your **Facebook Access Token** as **PAGE_ACCESS_TOKEN** variable value
-5. Put value of your choice into **VERIFY_TOKEN** value, exactly the same value you enter at Facebook, step 10
-6. At the bottom of the screen click `PREVIEW` then `Open preview pane`
-7. Preview opens on the right side, you'll see url ex. `observant-foregoing-scent.glitch.me/`, open menu and click `Copy Link`
-8. Now go to your facebook developer dashboard [https://developers.facebook.com/apps/](https://developers.facebook.com/apps/), and click your app
-9. On the left menu click `Messenger`, `Settings`, find `Webhooks` section, click `Add Callback URL`
-10. Paste your glitch url here, append `/webhook` at the end so full url looks something like `https://observant-foregoing-scent.glitch.me/webhook`, enter your verify token, click `Verify and save`
-11. You should see your webhook added, click `Add subscriptions` and select `messages`
-12. Your webhook is ready, now use Messenger to send any message to your page, it replies with your PSID
-
-
-----
-
-### Installation and Configuration Summary
-
-Quick summary to get things working:
-
-- Install **facebook_messenger** integration
-- Reboot Home Assistant
-- Create a `notify` entity, use your facebook page token
-- Reboot Home Assistant
-- Start adding the new entity to your automations & scripts :)
+### Cách lấy user PSID
 
 ----
 
@@ -167,60 +138,6 @@ Quick summary to get things working:
               title: "Tắt đèn"
               payload: "TAT_DEN"    
 ```
-#### Automation_Webhook JSON event
-
-```yaml
-alias: Webhook Event Messenger
-description: ""
-triggers:
-  - webhook_id: messenger_inbox
-    trigger: webhook
-    allowed_methods:
-      - POST
-      - PUT
-      - GET
-    local_only: false
-actions:
-  - variables:
-      data: "{{ trigger.json }}"
-      messaging: "{{ data.entry[0].messaging[0] }}"
-      sender_id: "{{ messaging.sender.id }}"
-      text: |-
-        {% if 'message' in messaging and 'text' in messaging.message %}
-          {{ messaging.message.text }}
-        {% elif 'postback' in messaging and 'title' in messaging.postback %}
-          {{ messaging.postback.title }}
-        {% else %}
-          ""
-        {% endif %}
-      payload: |-
-        {% if 'postback' in messaging %}
-          {{ messaging.postback.payload }}
-        {% elif 'message' in messaging and 'quick_reply' in messaging.message %}
-          {{ messaging.message.quick_reply.payload }}
-        {% else %}
-          "null"
-        {% endif %}
-      action_type: |-
-        {% if 'postback' in messaging %}
-          button
-        {% elif 'message' in messaging and 'quick_reply' in messaging.message %}
-          quick_reply
-        {% else %}
-          null
-        {% endif %}
-  - event: messenger_webhook
-    event_data:
-      sender_id: "{{ sender_id }}"
-      text: "{{ text }}"
-      payload: "{{ payload }}"
-      action_type: "{{ action_type }}"
-
-```
-
-It is important to specify correct `media_type`. It is validated by Facebook and message will be rejected when `media_type` doesn't match actual media file type. `image/jpeg` is default value.
-
-You can also test it in Developer Tools, under Services tab.
 
 ----
 
