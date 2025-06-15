@@ -38,7 +38,7 @@ Cài đặt thông HACS. [here](https://my.home-assistant.io/redirect/hacs_repos
 
 ### Cấu hình
 
-This integration exposes itself as a <a href="https://www.home-assistant.io/integrations/notify/" target="_blank">notifications integration</a>, and can be configured by adding this snippet in your `configuration.yaml` file:
+Tích hợp này tự hiển thị như một <a href="https://www.home-assistant.io/integrations/notify/" target="_blank">notifications integration</a>, và có thể được định cấu hình bằng cách thêm đoạn mã này vào file `configuration.yaml`:
 
 ```yaml
 notify:
@@ -47,21 +47,20 @@ notify:
   page_access_token: <YOUR FACEBOOK TOKEN>
   targets:
     - sid: <YOUR PSID>
-      name: nguyen
+      name: abc
 ```
 
-Replace `<YOUR FACEBOOK TOKEN>` with your facebook token, use secrets.yaml for better protection.
+Thay thế `<YOUR FACEBOOK TOKEN>` bằng Facebook token của bạn, nên đặt ở secrets.yaml để bảo mật hơn.
 
-`targets` attribute is optional. If you declared it, you can use human readable names instead of digits as your notification's target.
+`targets` là thuộc tính là tùy chọn. Nếu bạn khai báo nó, bạn có thể sử dụng tên người có thể đọc được thay vì các chữ số làm mục tiêu thông báo của bạn.
 
-Restart Home Assistant to load your configuration.
+Khởi động lại Home Assistant để tải cấu hình. 
 
 ---
 
-### How to obtain your Facebook token
+### Làm thế nào để lấy Facebook token
 
-To use this integration you must register as Facebook developer and create application that will be
-sending notifications on your behalf. First login to your Facebook account and click [here](https://developers.facebook.com/async/registration) to start registration process. It requires few steps, you must confirm your phone and email address, choose occupation (use developer :wink:).\
+Để sử dụng tích hợp này, bạn phải đăng ký làm nhà phát triển Facebook và tạo ứng dụng sẽ thay mặt bạn gửi thông báo. Đầu tiên đăng nhập vào tài khoản Facebook của bạn và click [here](https://developers.facebook.com/async/registration) để bắt đầu quá trình đăng ký. làm theo hướng dẫn cảu Facebook (use developer :wink:).\
 When you've done with registration process, add [new application](https://developers.facebook.com/apps/create/).
 
 1. Choose app type Business
