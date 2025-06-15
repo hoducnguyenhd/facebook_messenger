@@ -5,7 +5,7 @@
 
 # Facebook Messenger for Home Assistant
 
-This is an upgrade for <a href="https://www.home-assistant.io/integrations/facebook/" target="_blank">Home Assistant</a> Facebook integration. It allows you to send notification to Messenger with images.
+Đây là bản nâng cấp cho <a href="https://www.home-assistant.io/integrations/facebook/" target="_blank">Home Assistant</a> Facebook integration. Nó cho phép bạn gửi thông báo đến Messenger với hình ảnh, text, button, quicky_reply.
 
 ----
 
@@ -13,8 +13,8 @@ This is an upgrade for <a href="https://www.home-assistant.io/integrations/faceb
 
  * [Functionality](#functionality)
  * [Installation](#installation)
- * [Configuration](#configuration)
- * [How to obtain your Facebook token](#how-to-obtain-your-facebook-token)
+ * [cấu hình](#configuration)
+ * [Cách lấy mã thông báo Facebook của bạn](#how-to-obtain-your-facebook-token)
  * [Hot to obtain your user's PSID](#how-to-obtain-your-user-psid)
  * [Installation and Configuration Summary](#installation-and-configuration-summary)
  * [Usage](#usage)
