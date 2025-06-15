@@ -1,10 +1,7 @@
 [![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=emes30&repository=facebook_messenger&category=integration)
 \
-[![Validate](https://github.com/emes30/facebook_messenger/workflows/Validate/badge.svg)](https://github.com/emes30/facebook_messenger/actions?query=workflow:"Validate")
-[![GitHub release](https://img.shields.io/github/release/emes30/facebook_messenger?include_prereleases=&sort=semver&color=blue)](https://github.com/emes30/facebook_messenger/releases/)
 [![License](https://img.shields.io/badge/License-MIT-blue)](#license)
 [![hacs_badge](https://img.shields.io/badge/HACS-Default-41BDF5.svg)](https://github.com/hacs/integration)
-[![buymeacoffee](https://img.shields.io/badge/BuyMeACoffee-Donate-blue.svg)](https://www.buymeacoffee.com/emes30)
 
 # Facebook Messenger for Home Assistant
 
