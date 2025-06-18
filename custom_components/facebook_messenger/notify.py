@@ -1,3 +1,4 @@
+# notify.py
 """Facebook platform for notify component."""
 import os
 import json
@@ -10,18 +11,18 @@ import voluptuous as vol
 from homeassistant.components.notify import (
     ATTR_DATA,
     ATTR_TARGET,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA, # Keep this for backward compatibility for YAML config
     BaseNotificationService,
 )
-from homeassistant.const import CONTENT_TYPE_JSON
+from homeassistant.const import CONTENT_TYPE_JSON, CONF_API_KEY # CONF_API_KEY is not typically used for tokens, but illustrative
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import HomeAssistantType, ConfigType
+from homeassistant.config_entries import ConfigEntry
+
+from .const import DOMAIN, CONF_PAGE_ACCESS_TOKEN, CONF_TARGETS, CONF_NAME, CONF_SID
+
 
 _LOGGER = logging.getLogger(__name__)
-
-CONF_PAGE_ACCESS_TOKEN = "page_access_token"
-CONF_TARGETS = "targets"
-CONF_NAME = "name"
-CONF_SID = "sid"
 
 BASE_URL = "https://graph.facebook.com/v2.6/me/messages"
 BASE_URL_MEDIA = "https://graph.facebook.com/v14.0/me/messages"
@@ -35,6 +36,8 @@ TARGET_SCHEMA = vol.Schema(
     }
 )
 
+# This PLATFORM_SCHEMA is for YAML configuration.
+# The config flow will provide the data when configured via UI.
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_PAGE_ACCESS_TOKEN): cv.string,
@@ -43,11 +46,30 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def get_service(hass, config, discovery_info=None):
+async def async_get_service(
+    hass: HomeAssistantType,
+    config: ConfigType,
+    discovery_info: dict = None,
+) -> "FacebookNotificationService":
     """Get the Facebook notification service."""
+    # This function is called for YAML configurations
     return FacebookNotificationService(
         config[CONF_PAGE_ACCESS_TOKEN], config.get(CONF_TARGETS)
     )
+
+async def async_setup_entry(
+    hass: HomeAssistantType,
+    config_entry: ConfigEntry,
+    async_add_entities,
+) -> None:
+    """Set up the Facebook Messenger notify platform from a config entry."""
+    data = config_entry.data
+    options = config_entry.options
+
+    page_access_token = data[CONF_PAGE_ACCESS_TOKEN]
+    targets = options.get(CONF_TARGETS, []) # Targets are now stored in options
+
+    async_add_entities([FacebookNotificationService(page_access_token, targets)])
 
 
 class FacebookNotificationService(BaseNotificationService):
@@ -61,6 +83,7 @@ class FacebookNotificationService(BaseNotificationService):
             self.make_targets_map(targets)
 
     def make_targets_map(self, targets):
+        """Create a map of target names to SIDs."""
         for item in targets:
             self.targets_map[item[CONF_NAME]] = item[CONF_SID]
 
