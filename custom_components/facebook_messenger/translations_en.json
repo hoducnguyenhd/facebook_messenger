@@ -1,0 +1,7 @@
+{
+  "component.facebook_messenger.config.title": "Facebook Messenger",
+  "component.facebook_messenger.config.step.user.data.page_access_token": "Page Access Token",
+  "component.facebook_messenger.config.step.user.data.targets": "Notification Targets",
+  "component.facebook_messenger.config.step.user.title": "Facebook Messenger Config"
+}
+
