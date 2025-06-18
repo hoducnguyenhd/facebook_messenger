@@ -1,27 +1,20 @@
-# __init__.py
-from homeassistant import core
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN
+DOMAIN = "facebook_messenger"
 
-async def async_setup_entry(hass: core.HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up Facebook Messenger from a config entry."""
+async def async_setup(hass: HomeAssistant, config: dict) -> bool:
+    return True  # Optional nếu không cần YAML nữa
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = entry.data
-
-    await hass.config_entries.async_forward_entry_setups(entry, [Platform.NOTIFY])
+    hass.async_create_task(
+        hass.config_entries.async_forward_entry_setup(entry, "notify")
+    )
     return True
 
-async def async_unload_entry(hass: core.HomeAssistant, entry: ConfigEntry) -> bool:
-    """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, [Platform.NOTIFY])
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
-    return unload_ok
-
-async def async_setup(hass: core.HomeAssistant, config: dict) -> bool:
-    """Set up the Facebook Messenger component."""
-    # This remains for backward compatibility for YAML configuration,
-    # but the config flow will take precedence for new installations.
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    await hass.config_entries.async_forward_entry_unload(entry, "notify")
+    hass.data[DOMAIN].pop(entry.entry_id)
     return True
