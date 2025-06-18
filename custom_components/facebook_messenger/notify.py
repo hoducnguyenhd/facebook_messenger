@@ -2,6 +2,7 @@ import os
 import json
 import logging
 from http import HTTPStatus
+
 import requests
 import voluptuous as vol
 
@@ -14,39 +15,36 @@ from homeassistant.components.notify import (
 from homeassistant.const import CONTENT_TYPE_JSON
 import homeassistant.helpers.config_validation as cv
 
-from .const import (
-    CONF_PAGE_ACCESS_TOKEN,
-    CONF_TARGETS,
-    CONF_NAME,
-    CONF_SID
-)
-
 _LOGGER = logging.getLogger(__name__)
+
+CONF_PAGE_ACCESS_TOKEN = "page_access_token"
+CONF_TARGETS = "targets"
+CONF_NAME = "name"
+CONF_SID = "sid"
 
 BASE_URL = "https://graph.facebook.com/v2.6/me/messages"
 BASE_URL_MEDIA = "https://graph.facebook.com/v14.0/me/messages"
 KEY_MEDIA = "media"
 KEY_MEDIA_TYPE = "media_type"
 
-TARGET_SCHEMA = vol.Schema({
-    vol.Required(CONF_SID): cv.string,
-    vol.Required(CONF_NAME): cv.string,
-})
+TARGET_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_SID): cv.string,
+        vol.Required(CONF_NAME): cv.string,
+    }
+)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_PAGE_ACCESS_TOKEN): cv.string,
-    vol.Optional(CONF_TARGETS): vol.All(cv.ensure_list, [TARGET_SCHEMA]),
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_PAGE_ACCESS_TOKEN): cv.string,
+        vol.Optional(CONF_TARGETS): vol.All(cv.ensure_list, [TARGET_SCHEMA]),
+    }
+)
 
 def get_service(hass, config, discovery_info=None):
-    if discovery_info:
-        access_token = discovery_info.get(CONF_PAGE_ACCESS_TOKEN)
-        targets = discovery_info.get(CONF_TARGETS)
-    else:
-        access_token = config[CONF_PAGE_ACCESS_TOKEN]
-        targets = config.get(CONF_TARGETS)
-
-    return FacebookNotificationService(access_token, targets)
+    return FacebookNotificationService(
+        config[CONF_PAGE_ACCESS_TOKEN], config.get(CONF_TARGETS)
+    )
 
 class FacebookNotificationService(BaseNotificationService):
     def __init__(self, access_token, targets):
@@ -56,8 +54,6 @@ class FacebookNotificationService(BaseNotificationService):
             self.make_targets_map(targets)
 
     def make_targets_map(self, targets):
-        if isinstance(targets, str):  # if stored as comma-separated string
-            targets = [json.loads(t.strip()) for t in targets.split(',') if t.strip()]
         for item in targets:
             self.targets_map[item[CONF_NAME]] = item[CONF_SID]
 
