@@ -1,30 +1,43 @@
 import voluptuous as vol
 from homeassistant import config_entries
-from .const import DOMAIN, CONF_PAGE_ACCESS_TOKEN, CONF_TARGETS
+from .const import DOMAIN
 
+def parse_sender_ids(value):
+    result = {}
+    for pair in value.split(","):
+        pair = pair.strip()
+        if ":" in pair:
+            id_part, name_part = pair.split(":", 1)
+            result[id_part.strip()] = name_part.strip()
+    return result
 
-class FacebookMessengerOptionsFlow(config_entries.OptionsFlow):
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+def format_sender_ids(data: dict) -> str:
+    return ", ".join(f"{k}:{v}" for k, v in data.items())
+
+class FacebookMessengerOptionsFlowHandler(config_entries.OptionsFlow):
+    def __init__(self, config_entry):
         self.config_entry = config_entry
 
     async def async_step_init(self, user_input=None):
+        errors = {}
+        current_data = self.config_entry.data
+        sender_name_map = current_data.get("sender_name_map", {})
+
         if user_input is not None:
-            return self.async_create_entry(
-                title="Facebook Messenger Options",
-                data={
-                    CONF_PAGE_ACCESS_TOKEN: user_input[CONF_PAGE_ACCESS_TOKEN],
-                    CONF_TARGETS: [x.strip() for x in user_input.get(CONF_TARGETS, "").split(",") if x.strip()]
-                }
-            )
+            try:
+                parsed = parse_sender_ids(user_input["allowed_sender_ids"])
+                return self.async_create_entry(
+                    title="Facebook Messenger Options",
+                    data={"allowed_sender_ids": user_input["allowed_sender_ids"], "sender_name_map": parsed},
+                )
+            except Exception:
+                errors["base"] = "invalid_sender_ids"
 
-        current_targets = self.config_entry.options.get(CONF_TARGETS) or self.config_entry.data.get(CONF_TARGETS, [])
-        targets_str = ", ".join(current_targets) if isinstance(current_targets, list) else ""
+        schema = vol.Schema({
+            vol.Required(
+                "allowed_sender_ids",
+                default=format_sender_ids(sender_name_map)
+            ): str
+        })
 
-        return self.async_show_form(
-            step_id="init",
-            data_schema=vol.Schema({
-                vol.Required(CONF_PAGE_ACCESS_TOKEN, default=self.config_entry.options.get(
-                    CONF_PAGE_ACCESS_TOKEN, self.config_entry.data.get(CONF_PAGE_ACCESS_TOKEN))): str,
-                vol.Optional(CONF_TARGETS, default=targets_str): str
-            })
-        )
+        return self.async_show_form(step_id="init", data_schema=schema, errors=errors)
