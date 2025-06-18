@@ -1,26 +1,25 @@
-# notify.py
-"""Facebook platform for notify component."""
 import os
 import json
 import logging
 from http import HTTPStatus
-
 import requests
 import voluptuous as vol
 
 from homeassistant.components.notify import (
     ATTR_DATA,
     ATTR_TARGET,
-    PLATFORM_SCHEMA, # Keep this for backward compatibility for YAML config
+    PLATFORM_SCHEMA,
     BaseNotificationService,
 )
-from homeassistant.const import CONTENT_TYPE_JSON, CONF_API_KEY # CONF_API_KEY is not typically used for tokens, but illustrative
+from homeassistant.const import CONTENT_TYPE_JSON
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import HomeAssistantType, ConfigType
-from homeassistant.config_entries import ConfigEntry
 
-from .const import DOMAIN, CONF_PAGE_ACCESS_TOKEN, CONF_TARGETS, CONF_NAME, CONF_SID
-
+from .const import (
+    CONF_PAGE_ACCESS_TOKEN,
+    CONF_TARGETS,
+    CONF_NAME,
+    CONF_SID
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,66 +28,40 @@ BASE_URL_MEDIA = "https://graph.facebook.com/v14.0/me/messages"
 KEY_MEDIA = "media"
 KEY_MEDIA_TYPE = "media_type"
 
-TARGET_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_SID): cv.string,
-        vol.Required(CONF_NAME): cv.string,
-    }
-)
+TARGET_SCHEMA = vol.Schema({
+    vol.Required(CONF_SID): cv.string,
+    vol.Required(CONF_NAME): cv.string,
+})
 
-# This PLATFORM_SCHEMA is for YAML configuration.
-# The config flow will provide the data when configured via UI.
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_PAGE_ACCESS_TOKEN): cv.string,
-        vol.Optional(CONF_TARGETS): vol.All(cv.ensure_list, [TARGET_SCHEMA]),
-    }
-)
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_PAGE_ACCESS_TOKEN): cv.string,
+    vol.Optional(CONF_TARGETS): vol.All(cv.ensure_list, [TARGET_SCHEMA]),
+})
 
+def get_service(hass, config, discovery_info=None):
+    if discovery_info:
+        access_token = discovery_info.get(CONF_PAGE_ACCESS_TOKEN)
+        targets = discovery_info.get(CONF_TARGETS)
+    else:
+        access_token = config[CONF_PAGE_ACCESS_TOKEN]
+        targets = config.get(CONF_TARGETS)
 
-async def async_get_service(
-    hass: HomeAssistantType,
-    config: ConfigType,
-    discovery_info: dict = None,
-) -> "FacebookNotificationService":
-    """Get the Facebook notification service."""
-    # This function is called for YAML configurations
-    return FacebookNotificationService(
-        config[CONF_PAGE_ACCESS_TOKEN], config.get(CONF_TARGETS)
-    )
-
-async def async_setup_entry(
-    hass: HomeAssistantType,
-    config_entry: ConfigEntry,
-    async_add_entities,
-) -> None:
-    """Set up the Facebook Messenger notify platform from a config entry."""
-    data = config_entry.data
-    options = config_entry.options
-
-    page_access_token = data[CONF_PAGE_ACCESS_TOKEN]
-    targets = options.get(CONF_TARGETS, []) # Targets are now stored in options
-
-    async_add_entities([FacebookNotificationService(page_access_token, targets)])
-
+    return FacebookNotificationService(access_token, targets)
 
 class FacebookNotificationService(BaseNotificationService):
-    """Implementation of a notification service for the Facebook service."""
-
     def __init__(self, access_token, targets):
-        """Initialize the service."""
         self.page_access_token = access_token
         self.targets_map = {}
         if targets:
             self.make_targets_map(targets)
 
     def make_targets_map(self, targets):
-        """Create a map of target names to SIDs."""
+        if isinstance(targets, str):  # if stored as comma-separated string
+            targets = [json.loads(t.strip()) for t in targets.split(',') if t.strip()]
         for item in targets:
             self.targets_map[item[CONF_NAME]] = item[CONF_SID]
 
     def send_message(self, message="", **kwargs):
-        """Send a message to one or more targets."""
         payload = {"access_token": self.page_access_token}
         targets = kwargs.get(ATTR_TARGET)
         data = kwargs.get(ATTR_DATA) or {}
@@ -142,14 +115,12 @@ class FacebookNotificationService(BaseNotificationService):
                             data={
                                 "access_token": self.page_access_token,
                                 "recipient": json.dumps(recipient),
-                                "message": json.dumps(
-                                    {
-                                        "attachment": {
-                                            "type": "image",
-                                            "payload": {"is_reusable": False},
-                                        }
+                                "message": json.dumps({
+                                    "attachment": {
+                                        "type": "image",
+                                        "payload": {"is_reusable": False},
                                     }
-                                ),
+                                }),
                             },
                             files={"filedata": ("media.jpg", file_data, media_type)},
                             timeout=10,
@@ -179,9 +150,7 @@ class FacebookNotificationService(BaseNotificationService):
             if resp.status_code != HTTPStatus.OK:
                 log_error(resp)
 
-
 def log_error(response):
-    """Log error response from Facebook API."""
     try:
         obj = response.json()
         error_message = obj.get("error", {}).get("message", "Unknown error")
