@@ -1,24 +1,42 @@
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.core import HomeAssistant, ServiceCall
+import logging
 
-from .const import DOMAIN
+from .notify import FacebookNotificationService
 
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up Facebook Messenger component."""
-    return True
+_LOGGER = logging.getLogger(__name__)
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up Facebook Messenger from a config entry."""
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = entry.data
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(entry, "notify")
+async def async_setup(hass: HomeAssistant, config: dict) -> bool:
+    """Set up the Facebook Messenger component."""
+    notify_services = hass.services.async_services().get("notify", {})
+    service = notify_services.get("messenger")
+
+    if not service:
+        _LOGGER.warning("Notify service 'messenger' chưa được cấu hình.")
+        return True
+
+    async def handle_send_test(call: ServiceCall):
+        target = call.data.get("target")
+        message = call.data.get("message", "")
+        media = call.data.get("media")
+        media_type = call.data.get("media_type", "image/jpeg")
+        buttons = call.data.get("buttons")
+        quick_replies = call.data.get("quick_replies")
+
+        data = {}
+        if media:
+            data["media"] = media
+            data["media_type"] = media_type
+        if buttons:
+            data["buttons"] = buttons
+        if quick_replies:
+            data["quick_replies"] = quick_replies
+
+        service.send_message(message=message, target=[target], data=data)
+
+    hass.services.async_register(
+        domain="facebook_messenger",
+        service="send_test",
+        service_func=handle_send_test,
     )
-    return True
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Unload Facebook Messenger config entry."""
-    await hass.config_entries.async_forward_entry_unload(entry, "notify")
-    hass.data[DOMAIN].pop(entry.entry_id)
     return True
