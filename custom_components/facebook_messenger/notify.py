@@ -3,23 +3,44 @@ import os
 import json
 import logging
 from http import HTTPStatus
+
 import requests
+import voluptuous as vol
 
 from homeassistant.components.notify import (
     ATTR_DATA,
     ATTR_TARGET,
+    PLATFORM_SCHEMA,
     BaseNotificationService,
 )
 from homeassistant.const import CONTENT_TYPE_JSON
-
-from .const import CONF_PAGE_ACCESS_TOKEN, CONF_TARGETS, CONF_NAME, CONF_SID
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
+
+CONF_PAGE_ACCESS_TOKEN = "page_access_token"
+CONF_TARGETS = "targets"
+CONF_NAME = "name"
+CONF_SID = "sid"
 
 BASE_URL = "https://graph.facebook.com/v2.6/me/messages"
 BASE_URL_MEDIA = "https://graph.facebook.com/v14.0/me/messages"
 KEY_MEDIA = "media"
 KEY_MEDIA_TYPE = "media_type"
+
+TARGET_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_SID): cv.string,
+        vol.Required(CONF_NAME): cv.string,
+    }
+)
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_PAGE_ACCESS_TOKEN): cv.string,
+        vol.Optional(CONF_TARGETS): vol.All(cv.ensure_list, [TARGET_SCHEMA]),
+    }
+)
 
 
 def get_service(hass, config, discovery_info=None):
@@ -44,6 +65,7 @@ class FacebookNotificationService(BaseNotificationService):
             self.targets_map[item[CONF_NAME]] = item[CONF_SID]
 
     def send_message(self, message="", **kwargs):
+        """Send a message to one or more targets."""
         payload = {"access_token": self.page_access_token}
         targets = kwargs.get(ATTR_TARGET)
         data = kwargs.get(ATTR_DATA) or {}
@@ -136,6 +158,7 @@ class FacebookNotificationService(BaseNotificationService):
 
 
 def log_error(response):
+    """Log error response from Facebook API."""
     try:
         obj = response.json()
         error_message = obj.get("error", {}).get("message", "Unknown error")
