@@ -1,35 +1,31 @@
 import voluptuous as vol
 from homeassistant import config_entries
-from homeassistant.core import callback
-from .const import DOMAIN, CONF_PAGE_ACCESS_TOKEN, CONF_TARGETS
+from .const import DOMAIN
 
+def parse_sender_ids(value):
+    result = {}
+    for pair in value.split(","):
+        pair = pair.strip()
+        if ":" in pair:
+            id_part, name_part = pair.split(":", 1)
+            result[id_part.strip()] = name_part.strip()
+    return result
 
 class FacebookMessengerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     async def async_step_user(self, user_input=None):
         errors = {}
-
         if user_input is not None:
-            return self.async_create_entry(
-                title="Facebook Messenger",
-                data={
-                    CONF_PAGE_ACCESS_TOKEN: user_input[CONF_PAGE_ACCESS_TOKEN],
-                    CONF_TARGETS: [x.strip() for x in user_input.get(CONF_TARGETS, "").split(",") if x.strip()]
-                }
-            )
+            try:
+                parsed = parse_sender_ids(user_input["allowed_sender_ids"])
+                user_input["sender_name_map"] = parsed
+                return self.async_create_entry(title="Facebook Messenger", data=user_input)
+            except Exception:
+                errors["base"] = "invalid_sender_ids"
 
-        return self.async_show_form(
-            step_id="user",
-            data_schema=vol.Schema({
-                vol.Required(CONF_PAGE_ACCESS_TOKEN): str,
-                vol.Optional(CONF_TARGETS, default=""): str  # comma-separated list
-            }),
-            errors=errors
-        )
+        schema = vol.Schema({
+            vol.Required("allowed_sender_ids"): str,
+        })
 
-    @staticmethod
-    @callback
-    def async_get_options_flow(config_entry):
-        from .options_flow import FacebookMessengerOptionsFlow
-        return FacebookMessengerOptionsFlow(config_entry)
+        return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
