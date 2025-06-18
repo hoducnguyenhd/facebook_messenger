@@ -1,11 +1,9 @@
 {
   "domain": "facebook_messenger",
-  "name": "Facebook Messenger Integration",
+  "name": "Facebook Messenger",
   "version": "1.0.0",
-  "documentation": "https://example.com",
-  "dependencies": [],
-  "codeowners": ["@yourgithub"],
   "config_flow": true,
-  "iot_class": "cloud_push",
-  "requirements": []
+  "documentation": "https://github.com/hoducnguyenhd/facebook_messenger",
+  "requirements": [],
+  "codeowners": ["@hoducnguyenhd"]
 }
