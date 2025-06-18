@@ -1,0 +1,44 @@
+send_test:
+  name: Gửi tin nhắn test
+  description: Gửi một tin nhắn thử đến người nhận Messenger
+  fields:
+    target:
+      name: Target
+      description: Tên hoặc ID của người nhận
+      required: true
+      example: nguyen
+      selector:
+        text:
+    message:
+      name: Message
+      description: Nội dung tin nhắn
+      required: false
+      example: "Xin chào từ Home Assistant!"
+      selector:
+        text:
+    media:
+      name: Media Path
+      description: Đường dẫn đến ảnh trên hệ thống
+      required: false
+      example: "/config/www/image.jpg"
+      selector:
+        text:
+    media_type:
+      name: Media Type
+      description: Kiểu nội dung media (mặc định là image/jpeg)
+      required: false
+      default: image/jpeg
+      selector:
+        text:
+    buttons:
+      name: Buttons
+      description: Danh sách các nút (postback)
+      required: false
+      selector:
+        object:
+    quick_replies:
+      name: Quick Replies
+      description: Danh sách quick replies
+      required: false
+      selector:
+        object:
