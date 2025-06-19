@@ -11,15 +11,22 @@ BASE_URL = "https://graph.facebook.com/v18.0/me/messages"
 
 async def async_get_service(hass, config_entry):
     data = config_entry.options if config_entry.options else config_entry.data
-    return FacebookMessengerNotificationService(
-        page_access_token=data["page_access_token"],
-        targets=data.get("targets", {})
-    )
+    token = data.get("page_access_token")
+    targets_raw = data.get("allowed_sender_ids", "")
+    targets = {}
+
+    for item in targets_raw.split(","):
+        parts = item.strip().split(":")
+        if len(parts) == 2:
+            sid, name = parts
+            targets[sid.strip()] = name.strip()
+
+    return FacebookMessengerNotificationService(token, targets)
 
 class FacebookMessengerNotificationService(BaseNotificationService):
-    def __init__(self, page_access_token, targets):
-        self.token = page_access_token
-        self.targets = targets  # dict: sid => name
+    def __init__(self, token, targets):
+        self.token = token
+        self.targets = targets  # dict {sid: name}
 
     def send_message(self, message="", **kwargs):
         target_names = kwargs.get("target")
@@ -27,7 +34,6 @@ class FacebookMessengerNotificationService(BaseNotificationService):
             target_names = [target_names]
 
         data = kwargs.get("data") or {}
-
         media_path = data.get("media")
         media_type = data.get("media_type", "image/jpeg")
         buttons = data.get("buttons")
@@ -43,14 +49,13 @@ class FacebookMessengerNotificationService(BaseNotificationService):
                 self._send_media(sid, media_path, media_type)
                 continue
 
-            message_payload = self._build_message_payload(message, buttons, quick_replies, data)
-            self._send_payload(sid, message_payload)
+            payload = self._build_message_payload(message, buttons, quick_replies, data)
+            self._send_payload(sid, payload)
 
     def _resolve_sid(self, name_or_sid):
-        if name_or_sid in self.targets.values():
-            return next((k for k, v in self.targets.items() if v == name_or_sid), None)
-        elif name_or_sid in self.targets:
-            return name_or_sid
+        for sid, name in self.targets.items():
+            if name_or_sid == sid or name_or_sid == name:
+                return sid
         return None
 
     def _send_payload(self, sid, payload):
@@ -62,18 +67,18 @@ class FacebookMessengerNotificationService(BaseNotificationService):
         }
 
         try:
-            response = requests.post(url, json=body, headers={"Content-Type": CONTENT_TYPE_JSON}, timeout=10)
-            if response.status_code != 200:
-                _LOGGER.error("Facebook error: %s - %s", response.status_code, response.text)
+            resp = requests.post(url, json=body, headers={"Content-Type": CONTENT_TYPE_JSON}, timeout=10)
+            if resp.status_code != 200:
+                _LOGGER.error("Facebook error: %s - %s", resp.status_code, resp.text)
         except Exception as e:
-            _LOGGER.error("Failed to send payload: %s", e)
+            _LOGGER.error("Exception sending message: %s", e)
 
     def _send_media(self, sid, media_path, media_type):
         url = f"{BASE_URL}?access_token={self.token}"
         try:
-            with open(media_path, "rb") as file_data:
+            with open(media_path, "rb") as f:
                 files = {
-                    "filedata": (os.path.basename(media_path), file_data, media_type)
+                    "filedata": (os.path.basename(media_path), f, media_type)
                 }
                 data = {
                     "recipient": json.dumps({"id": sid}),
@@ -85,14 +90,13 @@ class FacebookMessengerNotificationService(BaseNotificationService):
                     }),
                     "access_token": self.token
                 }
-
-                response = requests.post(url, data=data, files=files, timeout=10)
-                if response.status_code != 200:
-                    _LOGGER.error("Failed to send media: %s - %s", response.status_code, response.text)
+                resp = requests.post(url, data=data, files=files, timeout=10)
+                if resp.status_code != 200:
+                    _LOGGER.error("Error sending media: %s - %s", resp.status_code, resp.text)
         except Exception as e:
-            _LOGGER.error("Error opening media file %s: %s", media_path, e)
+            _LOGGER.error("Error opening media file: %s", e)
 
-    def _build_message_payload(self, message, buttons, quick_replies, raw_data):
+    def _build_message_payload(self, message, buttons, quick_replies, data):
         if buttons:
             return {
                 "attachment": {
@@ -111,5 +115,5 @@ class FacebookMessengerNotificationService(BaseNotificationService):
             }
         else:
             payload = {"text": message}
-            payload.update(raw_data)  # append other fields if needed
+            payload.update(data)
             return payload
