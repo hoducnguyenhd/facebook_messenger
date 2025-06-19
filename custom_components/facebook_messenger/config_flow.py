@@ -1,14 +1,13 @@
-import voluptuous as vol
 from homeassistant import config_entries
+import voluptuous as vol
 from .const import DOMAIN
 
-def parse_sender_ids(value):
+def parse_targets(text: str) -> dict:
     result = {}
-    for pair in value.split(","):
-        pair = pair.strip()
+    for pair in text.split(","):
         if ":" in pair:
-            id_part, name_part = pair.split(":", 1)
-            result[id_part.strip()] = name_part.strip()
+            sid, name = pair.strip().split(":", 1)
+            result[sid.strip()] = name.strip()
     return result
 
 class FacebookMessengerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -18,14 +17,20 @@ class FacebookMessengerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is not None:
             try:
-                parsed = parse_sender_ids(user_input["allowed_sender_ids"])
-                user_input["sender_name_map"] = parsed
-                return self.async_create_entry(title="Facebook Messenger", data=user_input)
+                targets_dict = parse_targets(user_input["targets"])
+                return self.async_create_entry(
+                    title="Facebook Messenger",
+                    data={
+                        "page_access_token": user_input["page_access_token"],
+                        "targets": targets_dict
+                    },
+                )
             except Exception:
-                errors["base"] = "invalid_sender_ids"
+                errors["base"] = "invalid_targets"
 
         schema = vol.Schema({
-            vol.Required("allowed_sender_ids"): str,
+            vol.Required("page_access_token"): str,
+            vol.Required("targets"): str  # format: sid1:name1, sid2:name2
         })
 
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
