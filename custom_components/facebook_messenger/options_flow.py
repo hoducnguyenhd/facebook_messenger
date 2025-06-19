@@ -1,43 +1,42 @@
-import voluptuous as vol
 from homeassistant import config_entries
+import voluptuous as vol
 from .const import DOMAIN
 
-def parse_sender_ids(value):
+def parse_targets(text: str) -> dict:
     result = {}
-    for pair in value.split(","):
-        pair = pair.strip()
+    for pair in text.split(","):
         if ":" in pair:
-            id_part, name_part = pair.split(":", 1)
-            result[id_part.strip()] = name_part.strip()
+            sid, name = pair.strip().split(":", 1)
+            result[sid.strip()] = name.strip()
     return result
 
-def format_sender_ids(data: dict) -> str:
-    return ", ".join(f"{k}:{v}" for k, v in data.items())
+def format_targets(targets_dict: dict) -> str:
+    return ", ".join(f"{sid}:{name}" for sid, name in targets_dict.items())
 
 class FacebookMessengerOptionsFlowHandler(config_entries.OptionsFlow):
     def __init__(self, config_entry):
         self.config_entry = config_entry
 
     async def async_step_init(self, user_input=None):
-        errors = {}
         current_data = self.config_entry.data
-        sender_name_map = current_data.get("sender_name_map", {})
+        errors = {}
 
         if user_input is not None:
             try:
-                parsed = parse_sender_ids(user_input["allowed_sender_ids"])
+                targets_dict = parse_targets(user_input["targets"])
                 return self.async_create_entry(
-                    title="Facebook Messenger Options",
-                    data={"allowed_sender_ids": user_input["allowed_sender_ids"], "sender_name_map": parsed},
+                    title="Edit Facebook Messenger",
+                    data={
+                        "page_access_token": user_input["page_access_token"],
+                        "targets": targets_dict
+                    },
                 )
             except Exception:
-                errors["base"] = "invalid_sender_ids"
+                errors["base"] = "invalid_targets"
 
         schema = vol.Schema({
-            vol.Required(
-                "allowed_sender_ids",
-                default=format_sender_ids(sender_name_map)
-            ): str
+            vol.Required("page_access_token", default=current_data.get("page_access_token", "")): str,
+            vol.Required("targets", default=format_targets(current_data.get("targets", {}))): str
         })
 
         return self.async_show_form(step_id="init", data_schema=schema, errors=errors)
