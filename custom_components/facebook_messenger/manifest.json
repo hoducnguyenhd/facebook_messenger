@@ -1,9 +1,10 @@
 {
   "domain": "facebook_messenger",
-  "name": "Facebook Messenger",
+  "name": "Facebook Messenger Notify",
   "version": "1.0.0",
-  "config_flow": true,
   "documentation": "https://github.com/hoducnguyenhd/facebook_messenger",
   "requirements": [],
-  "codeowners": ["@hoducnguyenhd"]
+  "codeowners": ["@hoducnguyenhd"],
+  "config_flow": true,
+  "iot_class": "cloud_push"
 }
