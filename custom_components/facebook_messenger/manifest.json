@@ -1,6 +1,6 @@
 {
   "domain": "facebook_messenger",
-  "name": "Facebook Messenger Notify",
+  "name": "Facebook Messenger",
   "version": "1.0.0",
   "documentation": "https://github.com/hoducnguyenhd/facebook_messenger",
   "requirements": [],
