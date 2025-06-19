@@ -1,92 +1,55 @@
-"""Facebook platform for notify component."""
 import os
 import json
 import logging
-from http import HTTPStatus
-
 import requests
-import voluptuous as vol
-
+from http import HTTPStatus
 from homeassistant.components.notify import (
-    ATTR_DATA,
-    ATTR_TARGET,
-    PLATFORM_SCHEMA,
     BaseNotificationService,
 )
 from homeassistant.const import CONTENT_TYPE_JSON
-import homeassistant.helpers.config_validation as cv
+from .const import DOMAIN, CONF_PAGE_ACCESS_TOKEN, CONF_TARGETS
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_PAGE_ACCESS_TOKEN = "page_access_token"
-CONF_TARGETS = "targets"
-CONF_NAME = "name"
-CONF_SID = "sid"
+def parse_targets(target_str):
+    mapping = {}
+    parts = [t.strip() for t in target_str.split(",") if ":" in t]
+    for part in parts:
+        sid, name = part.split(":", 1)
+        mapping[name.strip()] = sid.strip()
+    return mapping
 
-BASE_URL = "https://graph.facebook.com/v2.6/me/messages"
-BASE_URL_MEDIA = "https://graph.facebook.com/v14.0/me/messages"
-KEY_MEDIA = "media"
-KEY_MEDIA_TYPE = "media_type"
-
-TARGET_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_SID): cv.string,
-        vol.Required(CONF_NAME): cv.string,
-    }
-)
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_PAGE_ACCESS_TOKEN): cv.string,
-        vol.Optional(CONF_TARGETS): vol.All(cv.ensure_list, [TARGET_SCHEMA]),
-    }
-)
-
-
-def get_service(hass, config, discovery_info=None):
-    """Get the Facebook notification service."""
-    return FacebookNotificationService(
-        config[CONF_PAGE_ACCESS_TOKEN], config.get(CONF_TARGETS)
-    )
-
+async def async_get_service(hass, config_entry, discovery_info=None):
+    config = hass.data[DOMAIN][config_entry.entry_id]
+    access_token = config[CONF_PAGE_ACCESS_TOKEN]
+    targets_raw = config.get(CONF_TARGETS, "")
+    targets_map = parse_targets(targets_raw)
+    return FacebookNotificationService(access_token, targets_map)
 
 class FacebookNotificationService(BaseNotificationService):
-    """Implementation of a notification service for the Facebook service."""
-
-    def __init__(self, access_token, targets):
-        """Initialize the service."""
+    def __init__(self, access_token, targets_map):
         self.page_access_token = access_token
-        self.targets_map = {}
-        if targets:
-            self.make_targets_map(targets)
-
-    def make_targets_map(self, targets):
-        for item in targets:
-            self.targets_map[item[CONF_NAME]] = item[CONF_SID]
+        self.targets_map = targets_map
 
     def send_message(self, message="", **kwargs):
-        """Send a message to one or more targets."""
         payload = {"access_token": self.page_access_token}
-        targets = kwargs.get(ATTR_TARGET)
-        data = kwargs.get(ATTR_DATA) or {}
+        targets = kwargs.get("target")
+        data = kwargs.get("data") or {}
 
-        media = data.get(KEY_MEDIA)
-        media_type = data.get(KEY_MEDIA_TYPE, "image/jpeg")
+        media = data.get("media")
+        media_type = data.get("media_type", "image/jpeg")
 
         body_message = {"text": message}
 
-        if media:
-            if not os.path.exists(media):
-                _LOGGER.error(f"Media file not found: [{media}]")
-                media = None
+        if media and os.path.exists(media):
+            pass
         elif "buttons" in data:
-            text_content = data.get("text", message)
             body_message = {
                 "attachment": {
                     "type": "template",
                     "payload": {
                         "template_type": "button",
-                        "text": text_content,
+                        "text": message,
                         "buttons": data["buttons"],
                     },
                 }
@@ -96,43 +59,37 @@ class FacebookNotificationService(BaseNotificationService):
                 "text": message,
                 "quick_replies": data["quick_replies"]
             }
-        else:
-            body_message.update(data)
-            if "attachment" in body_message:
-                body_message.pop("text", None)
 
         if not targets:
-            _LOGGER.error("At least 1 target is required")
+            _LOGGER.error("No targets provided")
             return
 
         for target in targets:
             if target in self.targets_map:
                 target = self.targets_map[target]
 
-            recipient = {"phone_number": target} if target.startswith("+") else {"id": target}
+            recipient = {"id": target}
 
-            if media:
+            if media and os.path.exists(media):
                 try:
                     with open(media, "rb") as file_data:
                         resp = requests.post(
-                            url=BASE_URL_MEDIA,
+                            url="https://graph.facebook.com/v14.0/me/messages",
                             data={
                                 "access_token": self.page_access_token,
                                 "recipient": json.dumps(recipient),
-                                "message": json.dumps(
-                                    {
-                                        "attachment": {
-                                            "type": "image",
-                                            "payload": {"is_reusable": False},
-                                        }
+                                "message": json.dumps({
+                                    "attachment": {
+                                        "type": "image",
+                                        "payload": {"is_reusable": False}
                                     }
-                                ),
+                                }),
                             },
                             files={"filedata": ("media.jpg", file_data, media_type)},
                             timeout=10,
                         )
                 except Exception as e:
-                    _LOGGER.error("Error opening media file: %s", e)
+                    _LOGGER.error("Error sending media: %s", e)
                     continue
             else:
                 body = {
@@ -143,7 +100,7 @@ class FacebookNotificationService(BaseNotificationService):
                 }
                 try:
                     resp = requests.post(
-                        BASE_URL,
+                        "https://graph.facebook.com/v2.6/me/messages",
                         data=json.dumps(body),
                         params=payload,
                         headers={"Content-Type": CONTENT_TYPE_JSON},
@@ -154,20 +111,9 @@ class FacebookNotificationService(BaseNotificationService):
                     continue
 
             if resp.status_code != HTTPStatus.OK:
-                log_error(resp)
-
-
-def log_error(response):
-    """Log error response from Facebook API."""
-    try:
-        obj = response.json()
-        error_message = obj.get("error", {}).get("message", "Unknown error")
-        error_code = obj.get("error", {}).get("code", "Unknown code")
-        _LOGGER.error(
-            "Facebook API error %s: %s (Code %s)",
-            response.status_code,
-            error_message,
-            error_code,
-        )
-    except Exception as e:
-        _LOGGER.error("Failed to parse error response: %s", e)
+                try:
+                    obj = resp.json()
+                    error_msg = obj.get("error", {}).get("message", "Unknown error")
+                    _LOGGER.error("Facebook API error %s: %s", resp.status_code, error_msg)
+                except Exception:
+                    _LOGGER.error("Non-JSON error from Facebook")
