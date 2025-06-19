@@ -6,7 +6,7 @@ import logging
 _LOGGER = logging.getLogger(__name__)
 
 async def async_get_service(hass, config_entry):
-    data = config_entry.data
+    data = config_entry.options if config_entry.options else config_entry.data
     return FacebookMessengerNotificationService(
         page_access_token=data["page_access_token"],
         targets=data.get("targets", {})
@@ -24,7 +24,6 @@ class FacebookMessengerNotificationService(BaseNotificationService):
 
         for name in target_names:
             sid = None
-            # name-based or sid-based
             if name in self.targets.values():
                 sid = next((k for k, v in self.targets.items() if v == name), None)
             elif name in self.targets:
