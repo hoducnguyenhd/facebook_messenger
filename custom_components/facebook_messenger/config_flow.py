@@ -20,10 +20,11 @@ class FacebookMessengerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 targets_dict = parse_targets(user_input["targets"])
                 return self.async_create_entry(
                     title="Facebook Messenger",
-                    data={
+                    data={},  # chỉ để tạo entry
+                    options={
                         "page_access_token": user_input["page_access_token"],
                         "targets": targets_dict
-                    },
+                    }
                 )
             except Exception:
                 errors["base"] = "invalid_targets"
