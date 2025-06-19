@@ -18,9 +18,9 @@ class FacebookMessengerOptionsFlowHandler(config_entries.OptionsFlow):
         self.config_entry = config_entry
 
     async def async_step_init(self, user_input=None):
-        current_data = self.config_entry.data
-        errors = {}
+        current = self.config_entry.options or {}
 
+        errors = {}
         if user_input is not None:
             try:
                 targets_dict = parse_targets(user_input["targets"])
@@ -29,14 +29,14 @@ class FacebookMessengerOptionsFlowHandler(config_entries.OptionsFlow):
                     data={
                         "page_access_token": user_input["page_access_token"],
                         "targets": targets_dict
-                    },
+                    }
                 )
             except Exception:
                 errors["base"] = "invalid_targets"
 
         schema = vol.Schema({
-            vol.Required("page_access_token", default=current_data.get("page_access_token", "")): str,
-            vol.Required("targets", default=format_targets(current_data.get("targets", {}))): str
+            vol.Required("page_access_token", default=current.get("page_access_token", "")): str,
+            vol.Required("targets", default=format_targets(current.get("targets", {}))): str
         })
 
         return self.async_show_form(step_id="init", data_schema=schema, errors=errors)
