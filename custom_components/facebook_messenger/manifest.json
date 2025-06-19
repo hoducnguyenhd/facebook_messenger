@@ -7,5 +7,4 @@
   "codeowners": ["@ban"],
   "requirements": [],
   "iot_class": "cloud_push",
-  "integration_type": "service"
 }
