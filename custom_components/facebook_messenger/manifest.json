@@ -2,9 +2,10 @@
   "domain": "facebook_messenger",
   "name": "Facebook Messenger",
   "version": "1.0.0",
-  "documentation": "https://github.com/hoducnguyenhd/facebook_messenger",
+  "documentation": "https://github.com/ban/ban",
+  "dependencies": [],
+  "codeowners": ["@ban"],
   "requirements": [],
-  "codeowners": ["@hoducnguyenhd"],
-  "config_flow": true,
-  "iot_class": "cloud_push"
+  "iot_class": "cloud_push",
+  "integration_type": "service"
 }
