@@ -60,20 +60,6 @@ Khởi động lại Home Assistant để tải cấu hình.
 ### Làm thế nào để lấy Facebook token
 
 Để sử dụng tích hợp này, bạn phải đăng ký làm nhà phát triển Facebook và tạo ứng dụng sẽ thay mặt bạn gửi thông báo. Đầu tiên đăng nhập vào tài khoản Facebook của bạn và click [here](https://developers.facebook.com/async/registration) để bắt đầu quá trình đăng ký. làm theo hướng dẫn của Facebook (use developer :wink:).\
-Khi bạn đã hoàn tất quá trình đăng ký, hãy thêm [new application](https://developers.facebook.com/apps/create/).
-
-1. Chọn loại ứng dụng Kinh Doanh
-2. Choose Display name, enter your email and click Create App. You'll have to enter password again.
-3. On the next page **Add products to your app** find Messenger tile and click Set up.
-4. Find **Access Tokens** section and click **Create new Page**, new tab will open, keep this one open, you return here in steps 7 and 10
-5. Provide Name and Category, you may choose whatever you like, but Name must be unique.
-6. Click next until you reach Ready page, you don't have to provide any additional information
-7. Return to **Access Tokens** tab, and this time click **Add or remove Page**, new window opens
-8. Confirm that it's really you, check Page you've just created, and click Next
-9. Ignore warning and click Ready!, your page is connected with Facebook
-10. Return to **Access Tokens** tab again, now click **Generate token**, check I understand,
-11. Success :muscle: finally you have your token, copy and save it
-
 ----
 
 ### Cách lấy user PSID
